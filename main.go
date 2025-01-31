@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -106,10 +107,6 @@ func main() {
 					continue
 				}
 
-				if i > 0 {
-					fmt.Fprintln(out)
-				}
-
 				if err := decodeXID(out, line); err != nil {
 					fmt.Fprintln(os.Stderr, "Decode error:", err)
 					os.Exit(1)
@@ -138,7 +135,59 @@ func main() {
 
 	// Validate
 	if validate != "" {
-		if _, err := xid.FromString(validate); err != nil {
+		if validate == "-" {
+			scanner := bufio.NewScanner(os.Stdin)
+			for scanner.Scan() {
+				line := strings.TrimSpace(scanner.Text())
+				if line == "" {
+					continue
+				}
+
+				err := validateXID(line)
+				if errors.Is(err, xid.ErrInvalidID) {
+					if verbose {
+						fmt.Fprintf(out, "Invalid %q\n", line)
+					} else {
+						fmt.Fprintf(os.Stderr, "Invalid %q\n", line)
+					}
+
+					os.Exit(1)
+					return
+				}
+
+				if err != nil {
+					if verbose {
+						fmt.Fprintf(out, "%q %v\n", line, err)
+					} else {
+						fmt.Fprintf(os.Stderr, "%q %v\n", line, err)
+					}
+					os.Exit(1)
+					return
+				}
+			}
+
+			if err := scanner.Err(); err != nil {
+				fmt.Fprintln(os.Stderr, "Read stdin error:", err)
+				os.Exit(1)
+				return
+			}
+
+			return
+		}
+
+		err := validateXID(validate)
+		if errors.Is(err, xid.ErrInvalidID) {
+			if verbose {
+				fmt.Fprintln(out, "Invalid ID")
+			} else {
+				fmt.Fprintln(os.Stderr, "Invalid ID")
+			}
+
+			os.Exit(1)
+			return
+		}
+
+		if err != nil {
 			if verbose {
 				fmt.Fprintln(out, err)
 			} else {
@@ -155,16 +204,14 @@ func main() {
 	for i := 0; i < count; i++ {
 		if verbose {
 			// TODO uudashr: we need a way to set machine ID, process ID, and counter
-			id := xid.New()
-			fmt.Fprintf(out, "XID:         %s\n", id.String())
-			fmt.Fprintf(out, "Timestamp:   %s\n", id.Time().Format(time.RFC3339))
-			fmt.Fprintf(out, "Machine ID:  %x\n", id.Machine())
-			fmt.Fprintf(out, "Process ID:  %d\n", id.Pid())
-			fmt.Fprintf(out, "Counter:     %d\n", id.Counter())
-			fmt.Fprintln(out)
+			if i > 0 {
+				fmt.Fprintln(out)
+			}
+
+			generateXIDVerbose(out)
 		} else {
 			// TODO uudashr: we need a way to set machine ID, process ID, and counter
-			fmt.Fprintln(out, xid.New().String())
+			generateXID(out)
 		}
 	}
 }
@@ -180,4 +227,22 @@ func decodeXID(w io.Writer, hex string) error {
 	fmt.Fprintf(w, "Process ID:  %d\n", id.Pid())
 	fmt.Fprintf(w, "Counter:     %d\n", id.Counter())
 	return nil
+}
+
+func validateXID(hex string) error {
+	_, err := xid.FromString(hex)
+	return err
+}
+
+func generateXID(w io.Writer) {
+	fmt.Fprintln(w, xid.New().String())
+}
+
+func generateXIDVerbose(w io.Writer) {
+	id := xid.New()
+	fmt.Fprintf(w, "XID:         %s\n", id.String())
+	fmt.Fprintf(w, "Timestamp:   %s\n", id.Time().Format(time.RFC3339))
+	fmt.Fprintf(w, "Machine ID:  %x\n", id.Machine())
+	fmt.Fprintf(w, "Process ID:  %d\n", id.Pid())
+	fmt.Fprintf(w, "Counter:     %d\n", id.Counter())
 }
