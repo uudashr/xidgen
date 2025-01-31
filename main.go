@@ -54,7 +54,9 @@ func main() {
 
 		decode   string
 		validate string
-		count    int
+		passthru bool
+
+		count int
 
 		outFmt    outFormat
 		separator string
@@ -66,6 +68,8 @@ func main() {
 
 	flag.StringVar(&decode, "decode", "", "Decode xid")
 	flag.StringVar(&validate, "validate", "", "Validate xid")
+	flag.BoolVar(&passthru, "passthru", false, "Passthru mode")
+
 	flag.IntVar(&count, "n", 1, "Generate n xid(s)")
 
 	flag.TextVar(&outFmt, "format", outFormatHex, "Output format [hex, binary]")
@@ -158,6 +162,8 @@ func main() {
 					os.Exit(1)
 					return
 				}
+
+				fmt.Fprintf(out, "%s%s", line, separator)
 			}
 
 			if err := scanner.Err(); err != nil {
@@ -190,6 +196,8 @@ func main() {
 			os.Exit(1)
 			return
 		}
+
+		fmt.Fprintf(out, "%s%s", validate, separator)
 
 		return
 	}
