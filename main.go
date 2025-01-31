@@ -99,16 +99,23 @@ func main() {
 	if decode != "" {
 		if decode == "-" {
 			scanner := bufio.NewScanner(os.Stdin)
+			var i int
 			for scanner.Scan() {
 				line := strings.TrimSpace(scanner.Text())
 				if line == "" {
 					continue
 				}
 
+				if i > 0 {
+					fmt.Fprintln(out)
+				}
+
 				if err := decodeXID(out, line); err != nil {
 					fmt.Fprintln(os.Stderr, "Decode error:", err)
 					os.Exit(1)
 				}
+
+				i++
 			}
 
 			if err := scanner.Err(); err != nil {
