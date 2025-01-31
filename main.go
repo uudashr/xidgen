@@ -56,7 +56,8 @@ func main() {
 		validate string
 		count    int
 
-		outFmt outFormat
+		outFmt    outFormat
+		separator string
 
 		outFile string
 
@@ -69,9 +70,10 @@ func main() {
 
 	flag.StringVar(&decode, "decode", "", "Decode xid")
 	flag.StringVar(&validate, "validate", "", "Validate xid")
-	flag.IntVar(&count, "n", 1, "Generate n xid")
+	flag.IntVar(&count, "n", 1, "Generate n xid(s)")
 
 	flag.TextVar(&outFmt, "format", outFormatHex, "Output format [hex, binary]")
+	flag.StringVar(&separator, "separator", "\n", "Separator")
 
 	flag.StringVar(&outFile, "o", "", "Output file")
 
@@ -205,13 +207,13 @@ func main() {
 		if verbose {
 			// TODO uudashr: we need a way to set machine ID, process ID, and counter
 			if i > 0 {
-				fmt.Fprintln(out)
+				fmt.Fprint(out, separator)
 			}
 
 			generateXIDVerbose(out)
 		} else {
 			// TODO uudashr: we need a way to set machine ID, process ID, and counter
-			generateXID(out)
+			generateXID(out, outFmt, separator)
 		}
 	}
 }
@@ -234,8 +236,13 @@ func validateXID(hex string) error {
 	return err
 }
 
-func generateXID(w io.Writer) {
-	fmt.Fprintln(w, xid.New().String())
+func generateXID(w io.Writer, format outFormat, separator string) {
+	if format == outFormatBinary {
+		w.Write(xid.New().Bytes())
+		return
+	}
+
+	fmt.Fprintf(w, "%s%s", xid.New().String(), separator)
 }
 
 func generateXIDVerbose(w io.Writer) {
