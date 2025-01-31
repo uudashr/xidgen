@@ -207,7 +207,7 @@ func main() {
 		if verbose {
 			// TODO uudashr: we need a way to set machine ID, process ID, and counter
 			if i > 0 {
-				fmt.Fprint(out, separator)
+				fmt.Println()
 			}
 
 			generateXIDVerbose(out)
@@ -216,6 +216,11 @@ func main() {
 			generateXID(out, outFmt, separator)
 		}
 	}
+
+	if !verbose && separator != "\n" {
+		fmt.Println()
+	}
+
 }
 
 func decodeXID(w io.Writer, hex string) error {
