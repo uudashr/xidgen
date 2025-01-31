@@ -1,9 +1,12 @@
 package main
 
 import (
+	"bufio"
 	"flag"
 	"fmt"
+	"io"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/rs/xid"
@@ -94,17 +97,35 @@ func main() {
 
 	// Decode
 	if decode != "" {
-		id, err := xid.FromString(decode)
-		if err != nil {
+		if decode == "-" {
+			scanner := bufio.NewScanner(os.Stdin)
+			for scanner.Scan() {
+				line := strings.TrimSpace(scanner.Text())
+				if line == "" {
+					continue
+				}
+
+				if err := decodeXID(out, line); err != nil {
+					fmt.Fprintln(os.Stderr, "Decode error:", err)
+					os.Exit(1)
+				}
+			}
+
+			if err := scanner.Err(); err != nil {
+				fmt.Fprintln(os.Stderr, "Read stdin error:", err)
+				os.Exit(1)
+				return
+			}
+
+			return
+		}
+
+		if err := decodeXID(out, decode); err != nil {
 			fmt.Fprintln(os.Stderr, "Decode error:", err)
 			os.Exit(1)
 			return
 		}
 
-		fmt.Fprintf(out, "Timestamp:   %s\n", id.Time().Format(time.RFC3339))
-		fmt.Fprintf(out, "Machine ID:  %x\n", id.Machine())
-		fmt.Fprintf(out, "Process ID:  %d\n", id.Pid())
-		fmt.Fprintf(out, "Counter:     %d\n", id.Counter())
 		return
 	}
 
@@ -139,4 +160,17 @@ func main() {
 			fmt.Fprintln(out, xid.New().String())
 		}
 	}
+}
+
+func decodeXID(w io.Writer, hex string) error {
+	id, err := xid.FromString(hex)
+	if err != nil {
+		return err
+	}
+
+	fmt.Fprintf(w, "Timestamp:   %s\n", id.Time().Format(time.RFC3339))
+	fmt.Fprintf(w, "Machine ID:  %x\n", id.Machine())
+	fmt.Fprintf(w, "Process ID:  %d\n", id.Pid())
+	fmt.Fprintf(w, "Counter:     %d\n", id.Counter())
+	return nil
 }
