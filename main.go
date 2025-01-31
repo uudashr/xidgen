@@ -60,10 +60,6 @@ func main() {
 		separator string
 
 		outFile string
-
-		// machineID string
-		// processID int
-		// counter   int
 	)
 
 	flag.BoolVar(&verbose, "v", false, "Verbose output")
@@ -76,10 +72,6 @@ func main() {
 	flag.StringVar(&separator, "separator", "\n", "Separator")
 
 	flag.StringVar(&outFile, "o", "", "Output file")
-
-	// flag.StringVar(&machineID, "machine-id", "", "Machine ID")
-	// flag.IntVar(&processID, "process-id", 0, "Process ID")
-	// flag.IntVar(&counter, "counter", 0, "Counter")
 
 	flag.Parse()
 
@@ -205,14 +197,12 @@ func main() {
 	// Generate
 	for i := 0; i < count; i++ {
 		if verbose {
-			// TODO uudashr: we need a way to set machine ID, process ID, and counter
 			if i > 0 {
 				fmt.Println()
 			}
 
 			generateXIDVerbose(out)
 		} else {
-			// TODO uudashr: we need a way to set machine ID, process ID, and counter
 			generateXID(out, outFmt, separator)
 		}
 	}
