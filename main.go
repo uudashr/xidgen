@@ -163,7 +163,9 @@ func main() {
 					return
 				}
 
-				fmt.Fprintf(out, "%s%s", line, separator)
+				if passthru {
+					fmt.Fprintf(out, "%s%s", line, separator)
+				}
 			}
 
 			if err := scanner.Err(); err != nil {
@@ -197,7 +199,9 @@ func main() {
 			return
 		}
 
-		fmt.Fprintf(out, "%s%s", validate, separator)
+		if passthru {
+			fmt.Fprintf(out, "%s%s", validate, separator)
+		}
 
 		return
 	}
