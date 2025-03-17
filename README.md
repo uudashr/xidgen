@@ -5,7 +5,7 @@ Xidgen is a cli tool to generate and decode [xid](https://github.com/rs/xid).
 ## Installation
 
 ```shell
-go install github.com/kechako/xidgen@latest
+go install github.com/uudashr/xidgen@latest
 ```
 
 ## Usage
